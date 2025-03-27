@@ -1,0 +1,83 @@
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f5f5f5;
+  overflow-y: auto;
+}
+
+/* src/styles/Sidebar.css */
+.sidebar {
+  width: 250px;
+  background-color: #3c5a3c;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.logo {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid #4b694b;
+}
+
+.logo h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+
+.menu a {
+  color: white;
+  text-decoration: none;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.menu a svg {
+  margin-right: 10px;
+}
+
+.menu a:hover, .menu a.active {
+  background-color: #4b694b;
+}
+
+.logout {
+  padding: 20px;
+  border-top: 1px solid #4b694b;
+}
+
+.logout button {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: 1px solid #fff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.logout button svg {
+  margin-right: 10px;
+}
+
+.logout button:hover {
+  background-color: #4b694b;
+}
