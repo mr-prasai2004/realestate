@@ -2,28 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowUpTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-// Mock data for a single property (in a real app, this would come from your API)
-const MOCK_PROPERTY = {
-  id: 1,
-  title: 'Modern Apartment in City Center',
-  description: 'A beautiful modern apartment located in the heart of the city. Recently renovated with high-end finishes, this apartment offers comfortable living with all the amenities you need. Close to restaurants, shops, and public transportation.',
-  propertyType: 'apartment',
-  bedrooms: 2,
-  bathrooms: 1,
-  area: 850,
-  price: 1200,
-  address: '123 Main Street',
-  city: 'London',
-  state: 'Greater London',
-  postalCode: 'SW1A 1AA',
-  country: 'UK',
-  amenities: ['WiFi', 'Air Conditioning', 'Kitchen', 'Washing Machine', 'TV'],
-  availableFrom: '2024-10-01',
-  availableTo: '2025-12-31',
-  images: ['/api/placeholder/400/200', '/api/placeholder/400/200', '/api/placeholder/400/200'],
-  isAvailable: true
-};
-
 const EditProperty = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,28 +35,43 @@ const EditProperty = () => {
   ];
 
   useEffect(() => {
-    // Simulate API call to fetch property data
-    const fetchProperty = () => {
-      setLoading(true);
-      setTimeout(() => {
-        // In a real app, you would fetch the property by ID from the API
-        // For demo purposes, we'll use our mock data
-        setFormData({
-          ...MOCK_PROPERTY,
-          // Convert date strings to the format required by the date input
-          availableFrom: MOCK_PROPERTY.availableFrom,
-          availableTo: MOCK_PROPERTY.availableTo
+    const fetchProperty = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`http://localhost:5000/api/properties/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
         });
-        
-        // Set up image previews
-        setPreviewImages(MOCK_PROPERTY.images.map(image => ({
-          file: null, // No file, since these are existing images
-          preview: image,
-          isExisting: true
-        })));
-        
+
+        const data = await res.json();
+
+        if (data.success) {
+          const property = data.data;
+
+          setFormData({
+            ...property,
+            area: property.square_feet,
+            postalCode: property.zip_code,
+            images: [],
+            availableFrom: property.available_from,
+            availableTo: property.available_to,
+          });
+
+          const previews = property.images.map((url) => ({
+            file: null,
+            preview: `http://localhost:5000${url}`,
+            isExisting: true
+          }));
+          setPreviewImages(previews);
+        } else {
+          console.error(data.message);
+        }
+      } catch (err) {
+        console.error('Failed to fetch property:', err);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchProperty();

@@ -147,21 +147,22 @@ const AddProperty = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // In AddProperty.jsx, update the handleSubmit function:
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     if (!validateForm()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    
+  
     setLoading(true);
-    
+  
     try {
-      // Create FormData for file upload
       const propertyData = new FormData();
-      
-      // Add text fields
+  
+      // Append fields with correct keys (snake_case where needed)
       propertyData.append('title', formData.title);
       propertyData.append('description', formData.description);
       propertyData.append('propertyType', formData.propertyType);
@@ -170,46 +171,52 @@ const AddProperty = () => {
       propertyData.append('state', formData.state);
       propertyData.append('zip_code', formData.zip_code);
       propertyData.append('country', formData.country);
-      propertyData.append('price', formData.price);
-      propertyData.append('bedrooms', formData.bedrooms);
-      propertyData.append('bathrooms', formData.bathrooms);
-      propertyData.append('square_feet', formData.square_feet);
-      
-      // Add amenities as JSON string
-      propertyData.append('amenities', JSON.stringify(formData.amenities));
-      
-      // Add availability dates
+  
+      // Convert numeric fields
+      propertyData.append('price', Number(formData.price));
+      propertyData.append('bedrooms', Number(formData.bedrooms));
+      propertyData.append('bathrooms', Number(formData.bathrooms));
+      propertyData.append('square_feet', Number(formData.square_feet));
+  
+      // Add availability dates using snake_case keys
       propertyData.append('available_from', formData.availableFrom);
       propertyData.append('available_to', formData.availableTo);
-      
-      // Add images
-      formData.images.forEach((image, index) => {
-        propertyData.append(`images`, image);
+  
+      // Amenities as a JSON string
+      propertyData.append('amenities', JSON.stringify(formData.amenities));
+  
+      // Append each image
+      formData.images.forEach((image) => {
+        propertyData.append('images', image);
       });
-      
-      // Send API request using propertyService
-      const response = await propertyService.create(propertyData);
-      
+  
+      // Optional: log FormData entries
+      for (let [key, value] of propertyData.entries()) {
+        console.log(key, value);
+      }
+  
+      // Submit to API
+      const response = await propertyService.addProperty(propertyData);
+  
       console.log('Property created:', response.data);
-      
-      // Redirect to properties list on success
       navigate('/dashboard/my-properties');
     } catch (error) {
       console.error('Error creating property:', error);
-      
-      // Handle different types of errors
-      const errorMessage = error.response?.data?.message || 
-        error.message || 
+  
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
         'An error occurred while submitting the property. Please try again.';
-      
-      setErrors({
-        ...errors,
-        form: errorMessage
-      });
+  
+      setErrors((prev) => ({
+        ...prev,
+        form: errorMessage,
+      }));
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div>

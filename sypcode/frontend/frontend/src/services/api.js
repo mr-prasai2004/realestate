@@ -55,23 +55,27 @@ const authService = {
 
 // Property Service
 const propertyService = {
-  addProperty: async (propertyData) => {
+  addProperty: async (formData) => {
+    const token = localStorage.getItem('token');
+  
     const response = await fetch(`${API_URL}/properties`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(propertyData)
+      body: formData // 🔥 Use the FormData directly
     });
-
+  
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to add property');
     }
-
+  
     return await response.json();
-  }
-};
+  },
+}  
+
+
 
 // Auth Utilities
 const setAuthToken = (token) => {

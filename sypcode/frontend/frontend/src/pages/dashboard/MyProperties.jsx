@@ -10,61 +10,7 @@ import {
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 
-// Mock data - In a real app, this would come from your API
-const MOCK_PROPERTIES = [
-  {
-    id: 1,
-    title: 'Modern Apartment in City Center',
-    location: 'London, UK',
-    price: 1200,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 850,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: true,
-    bookings: 4,
-    dateAdded: '2024-05-15',
-  },
-  {
-    id: 2,
-    title: 'Luxury Villa with Pool',
-    location: 'Manchester, UK',
-    price: 2500,
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 2200,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: true,
-    bookings: 2,
-    dateAdded: '2024-06-02',
-  },
-  {
-    id: 3,
-    title: 'Cozy Studio Near University',
-    location: 'Birmingham, UK',
-    price: 750,
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 450,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: false,
-    bookings: 1,
-    dateAdded: '2024-06-20',
-  },
-  {
-    id: 4,
-    title: 'Family Home with Garden',
-    location: 'Brighton, UK',
-    price: 1800,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 1500,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: true,
-    bookings: 0,
-    dateAdded: '2024-07-10',
-  },
-];
+
 
 const MyProperties = () => {
   const [properties, setProperties] = useState([]);
@@ -73,17 +19,46 @@ const MyProperties = () => {
   const [propertyToDelete, setPropertyToDelete] = useState(null);
 
   useEffect(() => {
-    // Simulate API call to fetch properties
-    const fetchProperties = () => {
-      setLoading(true);
-      setTimeout(() => {
-        setProperties(MOCK_PROPERTIES);
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+  
+        const response = await fetch('http://localhost:5000/api/properties/user/my-properties', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch properties');
+        }
+  
+        const result = await response.json();
+        const formatted = result.data.map((p) => ({
+          id: p.id,
+          title: p.title,
+          location: `${p.city}, ${p.country}`,
+          price: p.price,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          area: p.square_feet,
+          imageUrl: p.images?.[0] || '/api/placeholder/400/200',
+          isAvailable: true, // you can improve this logic if you track availability
+          bookings: 0, // update this if you have bookings data
+          dateAdded: p.created_at || new Date().toISOString(),
+        }));
+  
+        setProperties(formatted);
+      } catch (err) {
+        console.error('Error fetching properties:', err.message);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
-
+  
     fetchProperties();
   }, []);
+  
 
   const handleDelete = (propertyId) => {
     setPropertyToDelete(propertyId);

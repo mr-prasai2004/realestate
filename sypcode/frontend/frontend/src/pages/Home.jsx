@@ -3,75 +3,35 @@ import { Link } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import PropertyCard from '../components/PropertyCard';
 
-// Mock data - In a real app, this would come from your API
-const MOCK_PROPERTIES = [
-  {
-    id: 1,
-    title: 'Modern Apartment in City Center',
-    location: 'London, UK',
-    price: 1200,
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 850,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: true,
-  },
-  {
-    id: 2,
-    title: 'Luxury Villa with Pool',
-    location: 'Manchester, UK',
-    price: 2500,
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 2200,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: true,
-  },
-  {
-    id: 3,
-    title: 'Cozy Studio Near University',
-    location: 'Birmingham, UK',
-    price: 750,
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 450,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: false,
-  },
-  {
-    id: 4,
-    title: 'Family Home with Garden',
-    location: 'Brighton, UK',
-    price: 1800,
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 1500,
-    imageUrl: '/api/placeholder/400/200',
-    isAvailable: true,
-  },
-];
-
 const Home = () => {
   const [properties, setProperties] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
-    const fetchProperties = () => {
+    const fetchProperties = async () => {
       setLoading(true);
-      setTimeout(() => {
-        setProperties(MOCK_PROPERTIES);
+      try {
+        const res = await fetch('http://localhost:5000/api/properties');
+        const data = await res.json();
+        if (data.success) {
+          setProperties(data.data);
+        } else {
+          console.error(data.message);
+        }
+      } catch (err) {
+        console.error('Failed to fetch properties:', err);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchProperties();
   }, []);
 
-  const filteredProperties = properties.filter(property => 
+  const filteredProperties = properties.filter(property =>
     property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.toLowerCase().includes(searchTerm.toLowerCase())
+    property.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

@@ -43,105 +43,90 @@ const upload = multer({
 
 // Create a new property
 exports.createProperty = async (req, res) => {
+  console.log('📥 req.body:', req.body);
+console.log('🖼️ req.files:', req.files);
   try {
-    // Check if user is authenticated
     if (!req.user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'You must be logged in to create a property' 
-      });
+      return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
-    // Process and validate the incoming data
+    // 🔍 Log what's coming in
+    console.log('📦 req.body:', req.body);
+    console.log('📸 req.files:', req.files);
+
     const {
-      title,
-      description,
-      propertyType,
-      bedrooms,
-      bathrooms,
-      square_feet,
-      price,
-      address,
-      city,
-      state,
-      zip_code,
-      country,
-      available_from,
-      available_to
+      title = '',
+      description = '',
+      propertyType = '',
+      bedrooms = 1,
+      bathrooms = 1,
+      square_feet = '',
+      price = '',
+      address = '',
+      city = '',
+      state = '',
+      zip_code = '',
+      country = '',
+      available_from = '',
+      available_to = ''
     } = req.body;
 
-    // Parse amenities from JSON string to array
     let amenities = [];
     if (req.body.amenities) {
       try {
         amenities = JSON.parse(req.body.amenities);
-      } catch (error) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Invalid amenities format' 
-        });
+      } catch {
+        return res.status(400).json({ message: 'Invalid amenities format' });
       }
     }
 
-    // Validate required fields
-    if (!title || !description || !square_feet || !price || !address || !city || !available_from || !available_to) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please provide all required fields' 
-      });
+    // ✅ Required field check
+    const requiredFields = { title, description, square_feet, price, address, city, available_from, available_to };
+    const missing = Object.entries(requiredFields)
+      .filter(([key, val]) => !val || val.trim?.() === '')
+      .map(([key]) => key);
+
+    if (missing.length) {
+      return res.status(400).json({ message: `Missing fields: ${missing.join(', ')}` });
     }
 
-    // Create image paths array
-    const images = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        // Store the path relative to the server
-        images.push(`/${file.path.replace(/\\/g, '/')}`);
-      });
-    } else {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'At least one image is required' 
-      });
+    // ✅ Image validation
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'At least one image is required' });
     }
 
-    // Create property data object
+    const images = req.files.map(file => `/${file.path.replace(/\\/g, '/')}`);
+
     const propertyData = {
       title,
       description,
       propertyType,
-      bedrooms,
-      bathrooms,
-      square_feet,
-      price,
+      bedrooms: Number(bedrooms),
+      bathrooms: Number(bathrooms),
+      square_feet: Number(square_feet),
+      price: Number(price),
       address,
       city,
       state,
       zip_code,
       country,
-      amenities,
       available_from,
       available_to,
+      amenities,
       images,
-      owner_id: req.user.id // Set the owner to the current user
+      owner_id: req.user.id
     };
 
-    // Save property to database
     const newProperty = await Property.create(propertyData);
 
-    // Return success response
     res.status(201).json({
       success: true,
       message: 'Property created successfully',
       data: newProperty
     });
   } catch (error) {
-    console.error('Error creating property:', error);
-    res.status(500).json({
-      success: false,
-      message: 'An error occurred while creating the property',
-      error: error.message
-    });
+    console.error('🔥 Error:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
