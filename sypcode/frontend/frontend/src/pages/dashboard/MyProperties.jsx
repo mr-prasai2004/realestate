@@ -65,11 +65,32 @@ const MyProperties = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    // In a real app, this would be an API call
-    setProperties(properties.filter(property => property.id !== propertyToDelete));
-    setShowDeleteModal(false);
-    setPropertyToDelete(null);
+  const confirmDelete = async () => {
+    if (!propertyToDelete) return;
+  
+    try {
+      const response = await fetch(`http://localhost:5000/api/properties/${propertyToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to delete property');
+      }
+  
+      // Remove from UI
+      setProperties(properties.filter(property => property.id !== propertyToDelete));
+    } catch (err) {
+      console.error('Error deleting property:', err.message);
+      alert('Failed to delete the property. Please try again.');
+    } finally {
+      setShowDeleteModal(false);
+      setPropertyToDelete(null);
+    }
   };
 
   const cancelDelete = () => {

@@ -1,5 +1,5 @@
 const config = require('../config/config');
-
+const {pool} = require('../config/db');
 /**
  * Middleware to check if user has required role
  * @param {...String} roles - Roles that are allowed to access the resource
@@ -26,26 +26,23 @@ const checkRole = (...roles) => {
 
 // Middleware to check if user is property owner
 const isPropertyOwner = async (req, res, next) => {
+  const userId = req.user.id;
+  const propertyId = req.params.id;
+
   try {
-    const propertyId = req.params.id;
-    const userId = req.user.id;
-    
-    // Check if property exists and belongs to the user
-    const [rows] = await pool.execute(
-      'SELECT * FROM properties WHERE id = ? AND owner_id = ?',
+    const [rows] = await pool.query(
+      'SELECT id FROM properties WHERE id = ? AND owner_id = ?',
       [propertyId, userId]
     );
-    
+
     if (rows.length === 0) {
-      return res.status(403).json({ 
-        message: 'You are not authorized to manage this property' 
-      });
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
-    
+
     next();
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    console.error('❌ Error in isPropertyOwner:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

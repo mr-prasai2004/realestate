@@ -304,41 +304,30 @@ exports.updateProperty = async (req, res) => {
 // Delete a property
 exports.deleteProperty = async (req, res) => {
   try {
-    // Check if user is authenticated
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'You must be logged in to delete a property'
-      });
+      return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
-    // Find the property
     const property = await Property.findById(req.params.id);
 
-    // Check if property exists
     if (!property) {
-      return res.status(404).json({
-        success: false,
-        message: 'Property not found'
-      });
+      return res.status(404).json({ success: false, message: 'Property not found' });
     }
 
-    // Check if the user is the owner
     if (property.owner_id !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not authorized to delete this property'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    // Delete property and get list of image paths
     const imagePaths = await Property.delete(req.params.id);
 
-    // Delete property images from the server
-    imagePaths.forEach(imagePath => {
-      const fullPath = path.join(__dirname, '..', imagePath.replace(/^\//, ''));
-      if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
+    imagePaths.forEach((imagePath) => {
+      try {
+        const fullPath = path.join(__dirname, '..', imagePath.replace(/^\//, ''));
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      } catch (err) {
+        console.error(`⚠️ Error deleting file ${imagePath}:`, err.message);
       }
     });
 
@@ -346,7 +335,9 @@ exports.deleteProperty = async (req, res) => {
       success: true,
       message: 'Property deleted successfully'
     });
+
   } catch (error) {
+    console.error('🔥 deleteProperty error:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting property',
@@ -354,7 +345,6 @@ exports.deleteProperty = async (req, res) => {
     });
   }
 };
-
 // Add this function to your propertyController.js file
 
 // Check property availability
