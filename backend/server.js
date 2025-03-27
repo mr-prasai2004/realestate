@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const errorHandler = require('./middleware/errorHandler');
 const { testConnection } = require('./config/db');
+const path = require('path');
+
 
 // Load environment variables
 dotenv.config();
@@ -29,8 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static file serving for uploads
-app.use('/uploads', express.static('uploads'));
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Setup logging with Morgan
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 

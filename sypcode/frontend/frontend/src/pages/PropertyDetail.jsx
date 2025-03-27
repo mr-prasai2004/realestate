@@ -10,7 +10,6 @@ import {
   StarIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
-import PROPERTY_DATA from '../propertyData'; // Updated import
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -24,14 +23,48 @@ const PropertyDetail = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   useEffect(() => {
-    // Simulate API call
-    const fetchProperty = () => {
-      setLoading(true);
-      setTimeout(() => {
-        const foundProperty = PROPERTY_DATA.find(p => p.id === parseInt(id, 10));
-        setProperty(foundProperty || null);
+    const fetchProperty = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:5000/api/properties/${id}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const p = data.data;
+          setProperty({
+            id: p.id,
+            title: p.title,
+            location: `${p.city}, ${p.country}`,
+            price: p.price,
+            bedrooms: p.bedrooms,
+            bathrooms: p.bathrooms,
+            area: p.square_feet,
+            images: p.images.map(img => `http://localhost:5000${img}`),
+            isAvailable: true, // Replace with actual logic if available
+            description: p.description,
+            amenities: Array.isArray(p.amenities) ? p.amenities : JSON.parse(p.amenities || '[]'),
+            availableDates: {
+              start: p.available_from,
+              end: p.available_to,
+            },
+            owner: {
+              name: 'John Doe',
+              email: 'john@example.com',
+              phone: '123-456-7890',
+              responseRate: '100%',
+              responseTime: '1 hour'
+            },
+            reviews: []
+          });
+        } else {
+          setProperty(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch property:', err);
+        setProperty(null);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchProperty();
@@ -39,7 +72,6 @@ const PropertyDetail = () => {
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
-    // In a real app, you would make an API call here to book the property
     alert('Booking submitted! In a real app, this would be processed and saved.');
     setShowBookingForm(false);
   };

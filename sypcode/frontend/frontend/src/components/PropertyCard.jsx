@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPinIcon, HomeIcon, CurrencyDollarIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, HomeIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 
 const PropertyCard = ({ property }) => {
   const {
@@ -15,11 +15,17 @@ const PropertyCard = ({ property }) => {
     isAvailable,
   } = property;
 
+  const fullImageUrl = imageUrl?.startsWith('/uploads')
+  ? `http://localhost:5000${imageUrl}`
+  : 'http://localhost:5000/uploads/properties/placeholder.jpg';
+
+
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="relative">
         <img 
-          src={imageUrl || '/api/placeholder/400/200'} 
+          src={fullImageUrl} 
           alt={title}
           className="w-full h-52 object-cover"
         />

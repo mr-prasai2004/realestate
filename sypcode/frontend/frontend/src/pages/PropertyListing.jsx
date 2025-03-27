@@ -1,74 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 import PropertyCard from '../components/PropertyCard';
-import PROPERTY_DATA from '../propertyData'; // Updated import
 
 const PropertyListing = () => {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [bedroomsFilter, setBedroomsFilter] = useState('any');
   const [availabilityFilter, setAvailabilityFilter] = useState('all');
-  
+
   useEffect(() => {
-    // Simulate API call
-    const fetchProperties = () => {
+    const fetchProperties = async () => {
       setLoading(true);
-      setTimeout(() => {
-        setProperties(PROPERTY_DATA); // Using the imported data
-        setFilteredProperties(PROPERTY_DATA); // Using the imported data
+      try {
+        const response = await fetch('http://localhost:5000/api/properties');
+        const result = await response.json();
+        if (result.success) {
+          const formatted = result.data.map((p) => ({
+            id: p.id,
+            title: p.title,
+            location: `${p.city}, ${p.country}`,
+            price: p.price,
+            bedrooms: p.bedrooms,
+            bathrooms: p.bathrooms,
+            area: p.square_feet,
+            imageUrl: p.images?.[0] ? `http://localhost:5000${p.images[0]}` : '/uploads/placeholder.jpg',
+            isAvailable: true,
+          }));
+          setProperties(formatted);
+          setFilteredProperties(formatted);
+        } else {
+          console.error(result.message);
+        }
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchProperties();
   }, []);
 
   useEffect(() => {
-    // Apply filters
     let result = [...properties];
-    
-    // Search term filter
+
     if (searchTerm) {
-      result = result.filter(property => 
+      result = result.filter(property =>
         property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         property.location.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    // Price range filter
-    result = result.filter(property => 
+
+    result = result.filter(property =>
       property.price >= priceRange[0] && property.price <= priceRange[1]
     );
-    
-    // Bedrooms filter
+
     if (bedroomsFilter !== 'any') {
-      const bedroomsValue = parseInt(bedroomsFilter, 10);
       if (bedroomsFilter === '4+') {
         result = result.filter(property => property.bedrooms >= 4);
       } else {
-        result = result.filter(property => property.bedrooms === bedroomsValue);
+        result = result.filter(property => property.bedrooms === parseInt(bedroomsFilter, 10));
       }
     }
-    
-    // Availability filter
+
     if (availabilityFilter !== 'all') {
       const isAvailable = availabilityFilter === 'available';
       result = result.filter(property => property.isAvailable === isAvailable);
     }
-    
+
     setFilteredProperties(result);
   }, [properties, searchTerm, priceRange, bedroomsFilter, availabilityFilter]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Search is already handled by the useEffect
-  };
 
   const handleReset = () => {
     setSearchTerm('');
@@ -79,14 +84,12 @@ const PropertyListing = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="bg-primary-700 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-white">Find Your Perfect Property</h1>
           <p className="mt-2 text-primary-100">Browse through our extensive collection of properties</p>
-          
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="mt-6">
+
+          <form className="mt-6">
             <div className="flex">
               <div className="relative flex-grow">
                 <input
@@ -100,14 +103,14 @@ const PropertyListing = () => {
                   <MagnifyingGlassIcon className="h-5 w-5 text-secondary-400" />
                 </div>
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn bg-primary-600 text-white hover:bg-primary-800 border border-primary-500 px-6 py-3 rounded-l-none"
               >
                 Search
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="ml-2 btn bg-white text-primary-700 hover:bg-gray-100 border border-gray-300 px-3 py-3"
                 onClick={() => setShowFilters(!showFilters)}
               >
@@ -115,20 +118,16 @@ const PropertyListing = () => {
               </button>
             </div>
           </form>
-          
-          {/* Filters */}
+
           {showFilters && (
             <div className="mt-4 p-4 bg-white rounded-md shadow-md">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
-                    Price Range
-                  </label>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Price Range</label>
                   <div className="flex items-center space-x-2">
                     <input
                       type="number"
                       min="0"
-                      max={priceRange[1]}
                       value={priceRange[0]}
                       onChange={(e) => setPriceRange([parseInt(e.target.value, 10), priceRange[1]])}
                       className="input w-full"
@@ -143,11 +142,9 @@ const PropertyListing = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
-                    Bedrooms
-                  </label>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Bedrooms</label>
                   <select
                     value={bedroomsFilter}
                     onChange={(e) => setBedroomsFilter(e.target.value)}
@@ -160,11 +157,9 @@ const PropertyListing = () => {
                     <option value="4+">4+ Bedrooms</option>
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-secondary-700 mb-1">
-                    Availability
-                  </label>
+                  <label className="block text-sm font-medium text-secondary-700 mb-1">Availability</label>
                   <select
                     value={availabilityFilter}
                     onChange={(e) => setAvailabilityFilter(e.target.value)}
@@ -175,7 +170,7 @@ const PropertyListing = () => {
                     <option value="booked">Booked Only</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-end">
                   <button
                     type="button"
@@ -190,8 +185,7 @@ const PropertyListing = () => {
           )}
         </div>
       </div>
-      
-      {/* Property Listings */}
+
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {loading ? (
           <div className="flex justify-center items-center py-16">
@@ -212,7 +206,7 @@ const PropertyListing = () => {
                 </select>
               </div>
             </div>
-            
+
             {filteredProperties.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProperties.map((property) => (
@@ -231,29 +225,6 @@ const PropertyListing = () => {
                 >
                   Reset Filters
                 </button>
-              </div>
-            )}
-            
-            {/* Pagination */}
-            {filteredProperties.length > 0 && (
-              <div className="mt-8 flex justify-center">
-                <nav className="inline-flex rounded-md shadow">
-                  <a href="#" className="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-secondary-500 hover:bg-gray-50">
-                    Previous
-                  </a>
-                  <a href="#" className="px-3 py-2 border-t border-b border-gray-300 bg-primary-50 text-sm font-medium text-primary-600">
-                    1
-                  </a>
-                  <a href="#" className="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-secondary-500 hover:bg-gray-50">
-                    2
-                  </a>
-                  <a href="#" className="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-secondary-500 hover:bg-gray-50">
-                    3
-                  </a>
-                  <a href="#" className="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-secondary-500 hover:bg-gray-50">
-                    Next
-                  </a>
-                </nav>
               </div>
             )}
           </div>

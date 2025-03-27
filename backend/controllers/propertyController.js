@@ -345,9 +345,6 @@ exports.deleteProperty = async (req, res) => {
     });
   }
 };
-// Add this function to your propertyController.js file
-
-// Check property availability
 exports.checkAvailability = async (req, res) => {
   try {
     const { propertyId, startDate, endDate } = req.body;
